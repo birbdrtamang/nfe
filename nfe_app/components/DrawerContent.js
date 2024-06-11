@@ -1,91 +1,55 @@
-import React, {useEffect,useState} from 'react';
-import { View, StyleSheet, Text, Image,ActivityIndicator} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { Avatar, Title, Caption, Drawer, TouchableRipple, Switch } from 'react-native-paper';
+import { Title, Caption, Drawer } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-// get initial 
-const getInitials = (fullName) => {
-  const namesArray = fullName.trim().split(' ');
-  if (namesArray.length === 1) return namesArray[0].charAt(0);
-  const initials = namesArray[0].charAt(0) + namesArray[namesArray.length - 1].charAt(0);
-  return initials.toUpperCase();
-};
-
-// initail variable 
-// const initials = getInitials(userData.full_name);
-
-export default function DrawerContent({props,handleLogout}) {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
+export default function DrawerContent({ handleLogout, ...props }) {
   const navigation = useNavigation();
+  const [userData, setUserData] = useState(null);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedResponse = await AsyncStorage.getItem('loginResponse');
+        if (storedResponse !== null) {
+          const parsedResponse = JSON.parse(storedResponse);
+          setUserData(parsedResponse.user);
+        } else {
+          console.log('No data found in AsyncStorage for key: loginResponse');
+        }
+      } catch (error) {
+        console.error('Error retrieving data from AsyncStorage:', error);
+      }
+    };
 
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const storedResponse = await AsyncStorage.getItem('loginResponse');
-  //       if (storedResponse !== null) {
-  //         console.log('Stored response:', storedResponse); // Log the raw stored data
-  //         const parsedResponse = JSON.parse(storedResponse);
-  //         console.log('Parsed response:', parsedResponse); // Log the parsed data
-  //         setUserData(parsedResponse.user);
-  //       } else {
-  //         console.log('No data found in AsyncStorage for key: loginResponse');
-  //       }
-  //     } catch (error) {
-  //       setError('Error retrieving data from AsyncStorage');
-  //       console.error('Error retrieving data from AsyncStorage:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchUserData();
-  // }, []);
-
-  // if (loading) {
-  //   return (
-  //     <View style={styles.loadingContainer}>
-  //       <ActivityIndicator size="large" color="#0000ff" />
-  //       <Text>Loading...</Text>
-  //     </View>
-  //   );
-  // }
-
-  // if (error) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <Text>{error}</Text>
-  //     </View>
-  //   );
-  // }
-
-  // if (!userData) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <Text>No user data available.</Text>
-  //     </View>
-  //   );
-  // }
+    fetchUserData();
+  }, []);
 
   const Logout = () => {
     handleLogout();
   };
+
+  const getInitials = (fullName) => {
+    const namesArray = fullName.trim().split(' ');
+    if (namesArray.length === 1) return namesArray[0].charAt(0);
+    const initials = namesArray[0].charAt(0) + namesArray[namesArray.length - 1].charAt(0);
+    return initials.toUpperCase();
+  };
+
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.drawerContent}>
         <View style={styles.userInfoSection}>
-            <View style={styles.profileCircle}>
-                <Text style={styles.profileInitials}>SW</Text>
-            </View>
-            <Title style={styles.title}>Sonam Yangden</Title>
-            <Caption style={styles.caption}>@sonam_w</Caption>
+          <View style={styles.profileCircle}>
+            <Text style={styles.profileInitials}>
+              {userData ? getInitials(userData.full_name) : ''}
+            </Text>
+          </View>
+          <Title style={styles.title}>{userData ? userData.full_name : ''}</Title>
+          <Caption style={styles.caption}>{userData ? userData.email : ''}</Caption>
         </View>
         <Drawer.Section style={styles.drawerSection}>
           <DrawerItem
@@ -112,37 +76,36 @@ export default function DrawerContent({props,handleLogout}) {
           {/* Add more DrawerItem components as needed */}
         </Drawer.Section>
         <View style={styles.footer}>
-            <Text style={styles.footertext}>Ministry of Education</Text>
-            <Text style={styles.footertext}>Copyright © 2024</Text>
+          <Text style={styles.footertext}>Ministry of Education</Text>
+          <Text style={styles.footertext}>Copyright © 2024</Text>
         </View>
-        
       </View>
     </DrawerContentScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-    footer:{
-        paddingHorizontal:10,
-        marginTop:20,
-    },
-    footertext:{
-        textAlign:'center',
-        color:'gray'
-    },
-    profileCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 30,
-        backgroundColor: '#794fed',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    profileInitials: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  footer: {
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+  footertext: {
+    textAlign: 'center',
+    color: 'gray',
+  },
+  profileCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: '#6750A6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInitials: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   drawerContent: {
     flex: 1,
   },

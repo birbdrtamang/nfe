@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { Avatar, Title, Caption } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,7 +27,7 @@ const FirstRoute = ({ userData }) => (
       <Icon name="phone" color="#777777" size={20} />
       <View style={styles.info}>
         <Text style={styles.label}>{userData.cid_no}</Text>
-        <Caption style={styles.caption}>Phone Number</Caption>
+        <Caption style={styles.caption}>CID</Caption>
       </View>
     </View>
   </View>
@@ -149,6 +149,9 @@ const ProfileScreen = () => {
         initialLayout={{ width: Dimensions.get('window').width }}
         renderTabBar={renderTabBar}
       />
+      <View style={styles.imageV}>
+      <Image source={require('../assets/profile.png')} style={styles.image}/>
+      </View>
     </View>
   );
 };
@@ -163,16 +166,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 20,
+    backgroundColor: '#6750A6',
   },
   initial: {
-    borderWidth: 1,
-    borderColor: 'white',
-    backgroundColor: '#333',
-    padding: 15,
+    backgroundColor: '#fff',
+    padding: 10,
     borderRadius: 40,
   },
   initialText: {
-    color: '#fff',
+    color: '#6750A6',
     fontWeight: '600',
     fontSize: 25,
   },
@@ -180,12 +182,12 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   name: {
-    color: '#333',
+    color: '#fff',
     fontWeight: '600',
     fontSize: 20,
   },
   role: {
-    color: '#333',
+    color: '#fff',
   },
   container: {
     flex: 1,
@@ -199,11 +201,17 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'column',
     padding: 20,
+    backgroundColor:'#e8e8e8',
   },
   textContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
+    borderRadius:5,
+    paddingVertical: 3,
+    paddingHorizontal:10,
+    marginVertical: 4,
+    backgroundColor: '#fff',
   },
   info: {
     marginLeft: 20,
@@ -214,15 +222,23 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   tabBar: {
-    backgroundColor: 'white',
+    backgroundColor: '#b3a8d3'
   },
   tabLabel: {
-    color: '#333',
+    color: '#3e3064',
     fontWeight: 'bold',
   },
   indicator: {
-    backgroundColor: 'grey',
+    backgroundColor: '#fff'
   },
+  imageV: {
+    height: '20%',
+  },
+  image: {
+    height: '100%',
+    width: '50%',
+    marginStart: '52%',
+  }
 });
 
 export default ProfileScreen;

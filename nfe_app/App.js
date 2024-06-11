@@ -26,7 +26,7 @@ function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
-      <Stack.Screen name="Take Attendance" component={TakeAttendance} />
+      <Stack.Screen options={{ headerShown: false }} name="Take Attendance" component={TakeAttendance} />
       <Stack.Screen name="Update Attendance" component={UpdateAttendanceForm} />
     </Stack.Navigator>
   );
