@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import { TextInput, Button, D3Colors, MD2Colors } from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { TextInput, Button } from 'react-native-paper';
+import Toast from 'react-native-toast-message'; // Import Toast from react-native-toast-message
 
 const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 51 }, (_, index) => currentYear - 25 + index);
 
 const MonthPicker = ({ onSelect, visible, onClose }) => {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -42,47 +46,94 @@ const MonthPicker = ({ onSelect, visible, onClose }) => {
   );
 };
 
-const UpdateAttendanceForm = () => {
+const YearPicker = ({ onSelect, visible, onClose }) => {
+  const [selectedYear, setSelectedYear] = useState(null);
+
+  const handleYearSelect = (year) => {
+    setSelectedYear(year);
+    onSelect(year);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} onRequestClose={onClose} transparent>
+      <View style={styles.modalContainer}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>Select a Year</Text>
+          <ScrollView style={styles.scrollView}>
+            {years.map((year, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.monthButton,
+                  selectedYear === year && styles.selectedMonthButton
+                ]}
+                onPress={() => handleYearSelect(year)}
+              >
+                <Text style={styles.monthText}>{year}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const UpdateAttendanceForm = ({ route }) => {
   const [showPicker, setShowPicker] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [showYearPicker, setShowYearPicker] = useState(false);
   const [totalPresentDays, setTotalPresentDays] = useState(0);
   const [totalAbsentDays, setTotalAbsentDays] = useState(0);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
+  const { learnerName } = route.params;
 
   const handleMonthSelect = (month) => {
     setSelectedMonth(month);
-    setShowPicker(false); // Close the month picker modal after selection
+    setShowPicker(false);
+  };
+
+  const handleYearSelect = (year) => {
+    setSelectedYear(year);
+    setShowYearPicker(false);
   };
 
   const handleTotalPresentChange = (text) => {
     const presentDays = parseInt(text) || 0;
-    // Get the total days for the selected month dynamically based on the current year
-    const selectedDate = new Date();
-    const year = selectedDate.getFullYear();
-    const monthIndex = months.findIndex((m) => m === selectedMonth);
-    const totalDaysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    
-    // Validate if presentDays exceed total days in the month or are negative
+    const selectedDate = new Date(selectedYear, months.findIndex((m) => m === selectedMonth));
+    const totalDaysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+
     if (presentDays > totalDaysInMonth) {
-      // If presentDays exceed total days, display an error message and don't update the state
-      alert(`Total present days cannot exceed total days in ${selectedMonth}`);
+    Toast.show({
+      type: 'error',
+      text1: `Total present days cannot exceed total days in ${selectedMonth}`,
+      visibilityTime: 3000, // Optional duration in milliseconds
+      autoHide: true, // Auto hide the toast after visibilityTime
+    });
     } else if (presentDays < 0) {
-      // If presentDays are negative, display an error message and don't update the state
-      alert(`Total present days cannot be negative.`);
+      Toast.show({
+        type: 'error',
+        text1: 'Total present days cannot be negative.',
+      });
     } else {
-      // Otherwise, update the state with the entered value
       setTotalPresentDays(presentDays);
+      setTotalAbsentDays(totalDaysInMonth - presentDays);
     }
-  
-    // Calculate total absent days based on total days in the month and total present days
-    const absentDays = totalDaysInMonth - presentDays;
-    console.log('total present days: ',presentDays);
-    setTotalAbsentDays(absentDays);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Update Attendance For Kinga Penjor</Text>
-      {/* Month Picker */}
+      <Text style={styles.headerText}>Update Attendance For <Text style={styles.learnerName}>{learnerName}</Text></Text>
+      <YearPicker
+        visible={showYearPicker}
+        onSelect={handleYearSelect}
+        onClose={() => setShowYearPicker(false)}
+      />
       <MonthPicker
         visible={showPicker}
         onSelect={handleMonthSelect}
@@ -90,12 +141,20 @@ const UpdateAttendanceForm = () => {
       />
       <TextInput
         mode="outlined"
+        label="Select Year"
+        editable={false}
+        placeholder="Select Year"
+        value={selectedYear ? selectedYear.toString() : ''}
+        right={<TextInput.Icon onPress={() => setShowYearPicker(true)} icon="calendar" />}
+        style={styles.textInput}
+      />
+      <TextInput
+        mode="outlined"
         label="Select Month"
         editable={false}
         placeholder="Select Month"
-        value={selectedMonth} 
-        // onTouchStart={() => setShowPicker(true)} 
-        right={<TextInput.Icon   onPress={() => setShowPicker(true)}  icon="calendar"  />}
+        value={selectedMonth}
+        right={<TextInput.Icon onPress={() => setShowPicker(true)} icon="calendar" />}
         style={styles.textInput}
       />
       <TextInput
@@ -111,7 +170,7 @@ const UpdateAttendanceForm = () => {
         label="Total Absent Days"
         value={totalAbsentDays.toString()}
         style={styles.textInput}
-        editable={false} // Make it read-only
+        editable={false}
       />
       <Button
         style={styles.button}
@@ -121,6 +180,7 @@ const UpdateAttendanceForm = () => {
       >
         Update Attendance
       </Button>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
   );
 };
@@ -133,7 +193,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 16,
-    fontWeight:'500',
+    fontWeight: '500',
     marginBottom: 20,
   },
   textInput: {
@@ -143,7 +203,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: 50,
     justifyContent: 'center',
-    borderRadius:5,
+    borderRadius: 5,
   },
   modalContainer: {
     flex: 1,
@@ -156,24 +216,27 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: '80%',
+    height: '85%',
     alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
     marginBottom: 15,
   },
+  scrollView: {
+    width: '100%',
+  },
   monthButton: {
     paddingVertical: 10,
     width: '100%',
-    alignItems: 'start',
-    backgroundColor:'#794fed16',
-    marginBottom:5,
-    paddingHorizontal:10,
-    borderRadius:2,
+    alignItems: 'flex-start',
+    backgroundColor: '#794fed16',
+    marginBottom: 5,
+    paddingHorizontal: 10,
+    borderRadius: 2,
   },
   selectedMonthButton: {
     backgroundColor: '#794fedc1',
-    color:'#fff',
   },
   monthText: {
     fontSize: 16,
@@ -184,6 +247,11 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 16,
     color: 'blue',
+  },
+  learnerName: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    color: '#333',
   },
 });
 

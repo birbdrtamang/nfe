@@ -14,17 +14,23 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.headerText}>The Light That Ignites Hope</Text>
         </View>
       </ImageBackground>
-      <View style={styles.gridContainer}>
+     
+        <View style={styles.about}>
+          <View style={styles.paraContainer}> 
+            <Text style={styles.header}>About NFE</Text>
+            <Text style={styles.para}>Non-Formal Education Program is an educational activity which is targeted at providing functional literacy and numeracy skills to youth and adults who have missed the formal education system.</Text>
+          </View> 
+          
+          <Image source={require('../assets/about.jpg')} style={styles.aboutImage}/>
+        </View>
         
+
+      <View style={styles.gridContainer}>
           <TouchableOpacity style={styles.gridItem}  onPress={() => navigation.navigate('Take Attendance')}>
-            <ImageBackground style={styles.gridItemImg} source={require('../assets/attendance.jpg')}>
-              <View style={styles.glass}>
+              <View style={styles.placeholder}>
                 <Text>Take Attendance</Text>
               </View>
-            </ImageBackground>
           </TouchableOpacity>
-
-        
         <TouchableOpacity style={styles.gridItem}>
           <View style={styles.placeholder}>
             {/* <Icon name="account-check-outline" size={50}/> */}
@@ -40,7 +46,6 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.gridItem}>
           <View style={styles.placeholder}>
-            <Icon name="-check-outline" size={50}/>
             <Text>Marks</Text>
           </View>
         </TouchableOpacity>
@@ -49,6 +54,11 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 const styles = StyleSheet.create({
+  about:{
+    borderWidth:1,
+    paddingHorizontal:10,
+    paddingVertical:20
+  },
   image:{
     height:70,
     width:70
@@ -105,12 +115,7 @@ const styles = StyleSheet.create({
     alignItems:'center',
     borderRadius:10,    
   },
-  glass:{
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    width:'100%',
-    height:'100%',
-    borderRadius:10
-  },
+ 
   placeholder: {
     flex: 1,
     backgroundColor: '#e9e9e9',
@@ -118,6 +123,38 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center'
   },
+   
+  about: {
+    height:'20%',   
+    backgroundColor: '#6750A6',
+    borderRadius: 10,
+    alignItems:'center',
+    marginHorizontal:10,
+    paddingVertical:10,
+    flexDirection:'row',
+    justifyContent:'space-between',
+    paddingHorizontal:20
+  },
+  paraContainer:{
+    width:'50%',
+    height:'100%'
+  },
+  para:{
+    fontSize:11,
+    color:'#fff',
+    fontWeight:'thin'
+  },
+  aboutImage:{
+    height:'80%',
+    width:'40%',
+  },
+  header:{
+    fontWeight:'bold',
+    color:'#fff',
+    marginBottom:5,
+    fontSize:14
+  }
+
 });
 
 export default HomeScreen;

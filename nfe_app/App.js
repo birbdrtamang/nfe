@@ -5,12 +5,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message'; // Import Toast from react-native-toast-message
 
-// import component 
+// Import your screens and components
 import DrawerContent from './components/DrawerContent';
-
-// Import your screens
 import HomeScreen from './screens/HomeScreen';
 import TakeAttendance from './screens/TakeAttendance';
 import ProfileScreen from './screens/ProfileScreen';
@@ -21,8 +19,6 @@ const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
 function HomeStack() {
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-
   return (
     <Stack.Navigator>
       <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
@@ -32,11 +28,11 @@ function HomeStack() {
   );
 }
 
-function DrawerNavigator({handleLogout,navigation}) {
+function DrawerNavigator({ handleLogout }) {
   return (
-    <Drawer.Navigator initialRouteName="Home" drawerContent={(props) => <DrawerContent {...props} handleLogout={handleLogout} navigation={navigation}/>}>
+    <Drawer.Navigator initialRouteName="Home" drawerContent={(props) => <DrawerContent {...props} handleLogout={handleLogout} />}>
       <Drawer.Screen name="Non-Formal Education" component={HomeStack} />
-      <Drawer.Screen name="Profile" component={ProfileScreen} />
+      <Drawer.Screen name="Profile" component={ProfileScreen}/>
     </Drawer.Navigator>
   );
 }
@@ -47,26 +43,56 @@ export default function App() {
   // Function to update isLoggedIn state
   const handleLogin = () => {
     setIsLoggedIn(true);
+    Toast.show({
+      type: 'success',
+      text1: 'Logged in successfully',
+      visibilityTime: 3000,
+      autoHide: true,
+    });
   };
 
-   // Function to update isLoggedIn state for logout
-   const handleLogout = async() => {
+  // Function to update isLoggedIn state for logout
+  const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('loginResponse');
       setIsLoggedIn(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Logged out successfully',
+        visibilityTime: 3000,
+        autoHide: true,
+      });
     } catch (error) {
       console.error('Error during logout:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error logging out',
+        visibilityTime: 3000,
+        autoHide: true,
+      });
     }
   };
+
+  React.useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const storedResponse = await AsyncStorage.getItem('loginResponse');
+        if (storedResponse) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-      {isLoggedIn ? (
-          // If user is logged in, show DrawerNavigator
-          <DrawerNavigator handleLogout={handleLogout}/>
+        {isLoggedIn ? (
+          <DrawerNavigator handleLogout={handleLogout} />
         ) : (
-          // If user is not logged in, show Login screen
           <Stack.Navigator>
             <Stack.Screen options={{ headerShown: false }} name="Login">
               {props => <Login {...props} onLogin={handleLogin} />}
@@ -74,6 +100,7 @@ export default function App() {
           </Stack.Navigator>
         )}
       </NavigationContainer>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </SafeAreaProvider>
   );
 }

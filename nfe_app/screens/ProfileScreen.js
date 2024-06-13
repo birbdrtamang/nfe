@@ -17,6 +17,27 @@ const getInitials = (fullName) => {
 const FirstRoute = ({ userData }) => (
   <View style={styles.tabContainer}>
     <View style={styles.textContainer}>
+      <Icon name="map-marker" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.dzongkhag}</Text>
+        <Caption style={styles.caption}>Dzongkhag</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="map-marker-radius" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.gewog}</Text>
+        <Caption style={styles.caption}>Gewog</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="home-map-marker" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.village}</Text>
+        <Caption style={styles.caption}>Village</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
       <Icon name="phone" color="#777777" size={20} />
       <View style={styles.info}>
         <Text style={styles.label}>+975 {userData.contact_no}</Text>
@@ -24,7 +45,7 @@ const FirstRoute = ({ userData }) => (
       </View>
     </View>
     <View style={styles.textContainer}>
-      <Icon name="phone" color="#777777" size={20} />
+      <Icon name="card-account-details" color="#777777" size={20} />
       <View style={styles.info}>
         <Text style={styles.label}>{userData.cid_no}</Text>
         <Caption style={styles.caption}>CID</Caption>
@@ -33,13 +54,48 @@ const FirstRoute = ({ userData }) => (
   </View>
 );
 
-const SecondRoute = ({ email }) => (
+const SecondRoute = ({ userData }) => (
   <View style={styles.tabContainer}>
     <View style={styles.textContainer}>
-      <Icon name="email" color="#777777" size={20} />
+      <Icon name="map-marker" color="#777777" size={20} />
       <View style={styles.info}>
-        <Text style={styles.label}>{email}</Text>
-        <Caption style={styles.caption}>Email Address</Caption>
+        <Text style={styles.label}>{userData.present_dzo_name}</Text>
+        <Caption style={styles.caption}>Present Dzongkhag</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="map-marker-radius" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.present_gewog_name}</Text>
+        <Caption style={styles.caption}>Present Gewog</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="home-map-marker" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.village_name}</Text>
+        <Caption style={styles.caption}>Location</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="school" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.centrename}</Text>
+        <Caption style={styles.caption}>Center Name</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="barcode" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.centrecode}</Text>
+        <Caption style={styles.caption}>Center Code</Caption>
+      </View>
+    </View>
+    <View style={styles.textContainer}>
+      <Icon name="book" color="#777777" size={20} />
+      <View style={styles.info}>
+        <Text style={styles.label}>{userData.coursename}</Text>
+        <Caption style={styles.caption}>Course Name</Caption>
       </View>
     </View>
   </View>
@@ -114,7 +170,7 @@ const ProfileScreen = () => {
       case 'phone':
         return <FirstRoute userData={userData} />;
       case 'email':
-        return <SecondRoute email={userData.email} />;
+        return <SecondRoute userData={userData} />;
       default:
         return null;
     }
@@ -201,15 +257,15 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'column',
     padding: 20,
-    backgroundColor:'#e8e8e8',
+    backgroundColor: '#e8e8e8',
   },
   textContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    borderRadius:5,
+    borderRadius: 5,
     paddingVertical: 3,
-    paddingHorizontal:10,
+    paddingHorizontal: 10,
     marginVertical: 4,
     backgroundColor: '#fff',
   },
@@ -222,14 +278,14 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   tabBar: {
-    backgroundColor: '#b3a8d3'
+    backgroundColor: '#b3a8d3',
   },
   tabLabel: {
     color: '#3e3064',
     fontWeight: 'bold',
   },
   indicator: {
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
   },
   imageV: {
     height: '20%',

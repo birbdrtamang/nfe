@@ -1,30 +1,35 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { Icon, MD3Colors } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 const TakeAttendance = () => {
   const navigation = useNavigation();
-  const handler = () => {
-    navigation.navigate('Update Attendance');
-  }
+  const [isLoading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const hiddenStatuses = ['Z', 'F', 'D', 'ZU']; // Array of statuses to hide the button
 
-  // Define your data array
-  const data = [
-    { learner_name: 'Tobgyal', cid_reference_no: '11603002274', learner_code: '202201991', status: 'A' },
-    { learner_name: 'Phuntsho Wangmo', cid_reference_no: '11603001368', learner_code: '202201992', status: 'Z' },
-    { learner_name: 'Karma Choden', cid_reference_no: '11603004292', learner_code: '202201993', status: 'A' },
-    { learner_name: 'Tshering Yuden', cid_reference_no: '11603001979', learner_code: '202201994', status: 'Z' },
-    { learner_name: 'Sonam Choden', cid_reference_no: '11603002032', learner_code: '202201995', status: 'Z' },
-    { learner_name: 'Tashi Dema', cid_reference_no: '11603001565', learner_code: '202201996', status: 'Z' },
-    { learner_name: 'Tshering Dema', cid_reference_no: '11603004294', learner_code: '202201997', status: 'Z' },
-    { learner_name: 'Tshegaymo', cid_reference_no: '11603002306', learner_code: '202201998', status: 'Z' },
-    { learner_name: 'Yangchen', cid_reference_no: '11603001323', learner_code: '202201999', status: 'A' },
-    { learner_name: 'Sithar Wangmo', cid_reference_no: '11603001401', learner_code: '202202000', status: 'Z' },
-    { learner_name: 'Dema', cid_reference_no: '11603002316', learner_code: '202202001', status: 'Z' },
-    { learner_name: 'Dorji', cid_reference_no: '11603001361', learner_code: '202202002', status: 'Z' },
-    { learner_name: 'Kelzang Choden', cid_reference_no: '11603001396', learner_code: '202202003', status: 'Z' },
-  ];
+  const handler = (learnerName) => {
+    navigation.navigate('Update Attendance', { learnerName });
+  };
+
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type: type,
+      text1: text1,
+      text2: text2,
+      autoHide: false,
+    });
+  };
+  const showToast1 = (type, text1, text2) => {
+    Toast.show({
+      type: type,
+      text1: text1,
+      text2: text2,
+    });
+  };
 
   // Render each item in the FlatList
   const renderItem = ({ item }) => (
@@ -33,8 +38,9 @@ const TakeAttendance = () => {
         <Text style={styles.NameText}>{item.learner_name}</Text>
         <Text style={styles.CodeText}>{item.learner_code}</Text>
       </View>
-      {item.status === 'A' && (
-        <TouchableOpacity style={styles.TakeAttendanceButton} onPress={handler}>
+      {/* {(item.status === 'A' || item.status === 'P') && ( */}
+      {(item.status === 'A') && (
+        <TouchableOpacity style={styles.TakeAttendanceButton} onPress={() => handler(item.learner_name)}>
           <Icon
             source="pencil"
             color={MD3Colors.primary100}
@@ -42,27 +48,66 @@ const TakeAttendance = () => {
           />
         </TouchableOpacity>
       )}
-      {item.status === 'Z' && (
-        <TouchableOpacity style={styles.AttendanceDoneButton}>
+      {hiddenStatuses.includes(item.status) && (
+        <TouchableOpacity style={styles.AttendanceDoneButton} onPress={() => showToast1('success', 'Result Compiled', 'The result is already compiled.')}>
           <Icon
             source="check"
             color="green"
             size={20}
           />
         </TouchableOpacity>
-
       )}
     </View>
   );
 
+  // fetch all the learners of the current logged in instructor
+  useEffect(() => {
+    const fetchLearners = async () => {
+      try {
+        const storedResponse = await AsyncStorage.getItem('loginResponse');
+        if (storedResponse !== null) {
+          const parsedResponse = JSON.parse(storedResponse);
+          const instructorId = parsedResponse.user.nfe_center_id; // Retrieve instructor ID
+
+          const response = await fetch(`http://bff.moe.bt/api/nfeapp/getLearnerListForAttendance/${instructorId}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch learners');
+          }
+          const userData = await response.json();
+
+          if (userData.result === "Course is completed") {
+            showToast('info', 'Course Completed', 'The course is completed and there are no students assigned.');
+          } else {
+            setData(userData);
+          }
+
+          console.log(userData);
+
+        } else {
+          console.log('No data found in AsyncStorage for key: loginResponse');
+        }
+      } catch (error) {
+        console.error('Error fetching learners:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLearners();
+  }, []);
+
   return (
     <View style={styles.Container}>
-      {/* <Text style={styles.TextHeader}>Update my student's attendance</Text> */}
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.cid_reference_no.toString()}
-      />
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.cid_reference_no.toString()}
+        />
+      )}
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
   );
 };
@@ -115,5 +160,10 @@ const styles = StyleSheet.create({
     padding: 5,
     marginStart: 8,
     borderRadius: 100,
+  },
+  NoDataText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: '70%',
   },
 });
