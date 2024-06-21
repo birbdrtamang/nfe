@@ -1,160 +1,166 @@
 import React from 'react';
-import {  View, Text,Image, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, Image, StyleSheet, ImageBackground, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import Carousel from 'react-native-reanimated-carousel';
+
+const { width: windowWidth } = Dimensions.get('window');
+
+const carouselImages = [
+  require('../assets/herobanner.jpeg'),
+  require('../assets/herobanner.jpeg'),
+  require('../assets/herobanner.jpeg'),
+];
 
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../assets/kings.jpg')}
-        style={styles.headerImage}
-      >
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerText1}>~ NFE ~</Text>
-          <Text style={styles.headerText}>The Light That Ignites Hope</Text>
+      <View style={styles.carouselContainer}>
+        <Carousel
+          loop
+          width={windowWidth}
+          height={200}
+          autoPlay={true}
+          data={carouselImages}
+          scrollAnimationDuration={1000}
+          renderItem={({ index }) => (
+            <ImageBackground
+              source={carouselImages[index]}
+              style={styles.headerImage}
+              resizeMode="cover"
+            >
+              {/* You can add content over the ImageBackground here */}
+            </ImageBackground>
+          )}
+        />
+      </View>
+
+      <View style={styles.about}>
+        <View style={styles.paraContainer}>
+          <Text style={styles.header}>About NFE</Text>
+          <Text style={styles.para}>
+            Non-Formal Education Program is an educational activity which is targeted at providing functional literacy and numeracy skills to youth and adults who have missed the formal education system.
+          </Text>
         </View>
-      </ImageBackground>
-     
-        <View style={styles.about}>
-          <View style={styles.paraContainer}> 
-            <Text style={styles.header}>About NFE</Text>
-            <Text style={styles.para}>Non-Formal Education Program is an educational activity which is targeted at providing functional literacy and numeracy skills to youth and adults who have missed the formal education system.</Text>
-          </View> 
-          
-          <Image source={require('../assets/about.jpg')} style={styles.aboutImage}/>
-        </View>
-        
+        <Image source={require('../assets/about.jpg')} style={styles.aboutImage} />
+      </View>
 
       <View style={styles.gridContainer}>
-          <TouchableOpacity style={styles.gridItem}  onPress={() => navigation.navigate('Take Attendance')}>
-              <View style={styles.placeholder}>
-                <Text>Take Attendance</Text>
-              </View>
-          </TouchableOpacity>
-        <TouchableOpacity style={styles.gridItem}>
+
+        <TouchableOpacity style={[styles.gridItem, styles.shadow]} onPress={() => navigation.navigate('Take Attendance')}>
           <View style={styles.placeholder}>
-            {/* <Icon name="account-check-outline" size={50}/> */}
-            <Image source={require('../assets/lecture.png')} style={styles.image}/>
-            <Text>Today's Lecture</Text>
+            <Image source={require('../assets/takeattendance.jpeg')} style={styles.image} />
+            <Text style={styles.itemName}>Take Attendance</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.gridItem}>
+
+        <TouchableOpacity style={[styles.gridItem, styles.shadow]}>
           <View style={styles.placeholder}>
-            <Icon name="account-check-outline" size={50}/>
-            <Text>Assignments</Text>
+            <Image source={require('../assets/lecture.png')} style={styles.image} />
+            <Text style={styles.itemName}>Monitory Tool</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.gridItem}>
+
+        <TouchableOpacity style={[styles.gridItem, styles.shadow]}>
           <View style={styles.placeholder}>
-            <Text>Marks</Text>
+            <Image source={require('../assets/lecture.png')} style={styles.image} />
+            <Text style={styles.itemName}>Assignments</Text>
           </View>
         </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.gridItem, styles.shadow]}>
+          <View style={styles.placeholder}>
+            <Image source={require('../assets/lecture.png')} style={styles.image} />
+            <Text style={styles.itemName}>Marks</Text>
+          </View>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
 };
+
 const styles = StyleSheet.create({
-  about:{
-    borderWidth:1,
-    paddingHorizontal:10,
-    paddingVertical:20
-  },
-  image:{
-    height:70,
-    width:70
-  },
   container: {
     flex: 1,
-    // padding: 20,
     backgroundColor: '#f5f5f5',
   },
+  carouselContainer: {
+    height: 220,
+  },
   headerImage: {
-    height: 150,
-    width:'100%',
+    height: 200,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
-  headerTextContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-    width:'100%',
-    height:'100%',
-    alignItems:'center',
-    justifyContent:'center'
+  about: {
+    paddingHorizontal: 10,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#6750A6',
+    borderRadius: 10,
+    marginHorizontal: 10,
+    paddingVertical: 10,
   },
-  headerText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
+  paraContainer: {
+    width: '50%',
+    height: '100%',
   },
-  headerText1:{
-    color: 'white',
-    fontSize: 25,
-    fontWeight:'bold',
-    textAlign: 'center',
+  para: {
+    fontSize: 11,
+    color: '#fff',
+  },
+  aboutImage: {
+    height: '80%',
+    width: '40%',
+  },
+  header: {
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 5,
+    fontSize: 14,
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding:20,
+    padding: 20,
     justifyContent: 'space-between',
   },
   gridItem: {
     width: '48%',
     aspectRatio: 1,
     marginBottom: 20,
-    borderRadius:10
-    // borderWidth:1
+    borderRadius: 10,
   },
-  gridItemImg: {
-    width: '100%',
-    height:'100%',
-    marginBottom: 20,
-    justifyContent:'center',
-    alignItems:'center',
-    borderRadius:10,    
-  },
- 
   placeholder: {
     flex: 1,
-    backgroundColor: '#e9e9e9',
+    backgroundColor: '#8f76cc',
     borderRadius: 10,
-    justifyContent:'center',
-    alignItems:'center'
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
   },
-   
-  about: {
-    height:'20%',   
-    backgroundColor: '#6750A6',
-    borderRadius: 10,
-    alignItems:'center',
-    marginHorizontal:10,
-    paddingVertical:10,
-    flexDirection:'row',
-    justifyContent:'space-between',
-    paddingHorizontal:20
+  image: {
+    height: 75,
+    width: 75,
   },
-  paraContainer:{
-    width:'50%',
-    height:'100%'
+  itemName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
-  para:{
-    fontSize:11,
-    color:'#fff',
-    fontWeight:'thin'
+  shadow: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
   },
-  aboutImage:{
-    height:'80%',
-    width:'40%',
-  },
-  header:{
-    fontWeight:'bold',
-    color:'#fff',
-    marginBottom:5,
-    fontSize:14
-  }
-
 });
 
 export default HomeScreen;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import LoginButton from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,7 @@ const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleEmailChange = (text) => {
     setEmail(text);
@@ -20,19 +21,21 @@ const Login = ({ onLogin }) => {
 
   const handleLogin = async () => {
     if (email === '' || password === '') {
-      Alert.alert('Alert!', 'Please enter your credentials.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter your credentials.',
+      });
       return;
     }
+    setLoading(true);
     try {
       const response = await fetch('http://bff.moe.bt/api/nfeapp/nfeapplogin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -56,11 +59,21 @@ const Login = ({ onLogin }) => {
         });
       } else {
         console.log('Invalid credentials:', data);
-        Alert.alert('Error', data.status);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: data.status,
+        });
       }
     } catch (error) {
       console.error('Error during login:', error);
-      Alert.alert('Error', 'An error occurred while logging in. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An error occurred while logging in. Please try again.',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +105,7 @@ const Login = ({ onLogin }) => {
         onChangeText={handlePasswordChange}
         value={password}
       />
-      <LoginButton onPress={handleLogin} />
+      <LoginButton onPress={handleLogin} loading={loading} />
 
       <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
@@ -108,7 +121,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: '60%',
-    objectFit:'contain',
+    objectFit: 'contain',
     alignSelf: 'center',
     marginTop: 10,
   },
@@ -117,15 +130,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#333',
     marginBottom: 10,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
     marginBottom: 30,
+    textAlign: 'center',
   },
-  input:{
-    marginBottom:15
-  }
+  input: {
+    marginBottom: 15,
+  },
 });
 
 export default Login;
