@@ -38,7 +38,8 @@ const TakeAttendance = () => {
         <Text style={styles.NameText}>{item.learner_name}</Text>
         <Text style={styles.CodeText}>{item.learner_code}</Text>
       </View>
-      {/* {(item.status === 'A' || item.status === 'P') && ( */}
+
+            {/* {(item.status === 'A' || item.status === 'P') && ( */}
       {(item.status === 'A') && (
         <TouchableOpacity style={styles.TakeAttendanceButton} onPress={() => handler(item.learner_name)}>
           <Icon

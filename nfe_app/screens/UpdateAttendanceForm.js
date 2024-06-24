@@ -1,57 +1,38 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { TextInput, Button } from 'react-native-paper';
-import Toast from 'react-native-toast-message'; // Import Toast from react-native-toast-message
+import Toast from 'react-native-toast-message';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 51 }, (_, index) => currentYear - 25 + index);
+const generateMonthYearRange = (startMonth, startYear, endMonth, endYear) => {
+  const range = [];
+  let currentYear = startYear;
+  let currentMonthIndex = months.indexOf(startMonth);
 
-const MonthPicker = ({ onSelect, visible, onClose }) => {
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  while (currentYear < endYear || (currentYear === endYear && currentMonthIndex <= months.indexOf(endMonth))) {
+    range.push(`${months[currentMonthIndex]} ${currentYear}`);
+    currentMonthIndex++;
+    if (currentMonthIndex > 11) {
+      currentMonthIndex = 0;
+      currentYear++;
+    }
+  }
 
-  const handleMonthSelect = (month) => {
-    setSelectedMonth(month);
-    onSelect(month);
-    onClose();
-  };
-
-  return (
-    <Modal visible={visible} onRequestClose={onClose} transparent>
-      <View style={styles.modalContainer}>
-        <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Select a Month</Text>
-          {months.map((month, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.monthButton,
-                selectedMonth === month && styles.selectedMonthButton
-              ]}
-              onPress={() => handleMonthSelect(month)}
-            >
-              <Text style={styles.monthText}>{month}</Text>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
+  return range;
 };
 
-const YearPicker = ({ onSelect, visible, onClose }) => {
-  const [selectedYear, setSelectedYear] = useState(null);
+const MonthPicker = ({ onSelect, visible, onClose, monthYearRange }) => {
+  const [selectedMonthYear, setSelectedMonthYear] = useState(null);
 
-  const handleYearSelect = (year) => {
-    setSelectedYear(year);
-    onSelect(year);
+  const handleMonthYearSelect = (monthYear) => {
+    setSelectedMonthYear(monthYear);
+    onSelect(monthYear);
     onClose();
   };
 
@@ -59,18 +40,18 @@ const YearPicker = ({ onSelect, visible, onClose }) => {
     <Modal visible={visible} onRequestClose={onClose} transparent>
       <View style={styles.modalContainer}>
         <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Select a Year</Text>
+          <Text style={styles.modalTitle}>Select a Month and Year</Text>
           <ScrollView style={styles.scrollView}>
-            {years.map((year, index) => (
+            {monthYearRange.map((monthYear, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.monthButton,
-                  selectedYear === year && styles.selectedMonthButton
+                  selectedMonthYear === monthYear && styles.selectedMonthButton
                 ]}
-                onPress={() => handleYearSelect(year)}
+                onPress={() => handleMonthYearSelect(monthYear)}
               >
-                <Text style={styles.monthText}>{year}</Text>
+                <Text style={styles.monthText}>{monthYear}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -85,36 +66,99 @@ const YearPicker = ({ onSelect, visible, onClose }) => {
 
 const UpdateAttendanceForm = ({ route }) => {
   const [showPicker, setShowPicker] = useState(false);
-  const [showYearPicker, setShowYearPicker] = useState(false);
   const [totalPresentDays, setTotalPresentDays] = useState(0);
   const [totalAbsentDays, setTotalAbsentDays] = useState(0);
-  const [selectedYear, setSelectedYear] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedMonthYear, setSelectedMonthYear] = useState(null);
+  const [monthYearRange, setMonthYearRange] = useState([]);
+  const [monthYearIdMap, setMonthYearIdMap] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
+  const [instructorId, setInstructorId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const { learnerName } = route.params;
 
-  const handleMonthSelect = (month) => {
-    setSelectedMonth(month);
+  useEffect(() => {
+    const fetchInstructorId = async () => {
+      try {
+        const storedResponse = await AsyncStorage.getItem('loginResponse');
+        if (storedResponse !== null) {
+          const parsedResponse = JSON.parse(storedResponse);
+          const id = parsedResponse.user.staff_id;
+          setInstructorId(id);
+        }
+      } catch (error) {
+        console.error('Error reading value from AsyncStorage', error);
+      }
+    };
+
+    fetchInstructorId();
+  }, []);
+
+  useEffect(() => {
+    const fetchCentreDetailsAndDateRange = async () => {
+      if (instructorId) {
+        try {
+          setLoading(true);
+          const profileResponse = await axios.get(`http://bff.moe.bt/api/nfeapp/mobileappgetinstructorprofile/${instructorId}`);
+          const { centre_id, centre_details_id } = profileResponse.data;
+
+          const dateRangeResponse = await axios.get(`http://bff.moe.bt/api/nfeapp/getCourseDateRangeByCentreIdByCentreDetailId/${centre_id}/${centre_details_id}`);
+          const attendanceData = dateRangeResponse.data;
+
+          const startMonth = attendanceData[0].attendance_month;
+          const startYear = attendanceData[0].attendance_year;
+          const endMonth = attendanceData[attendanceData.length - 1].attendance_month;
+          const endYear = attendanceData[attendanceData.length - 1].attendance_year;
+
+          const range = generateMonthYearRange(startMonth, startYear, endMonth, endYear);
+          const idMap = {};
+          attendanceData.forEach(item => {
+            const key = `${item.attendance_month} ${item.attendance_year}`;
+            idMap[key] = item.id;
+          });
+
+          setMonthYearRange(range);
+          setMonthYearIdMap(idMap);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCentreDetailsAndDateRange();
+  }, [instructorId]);
+
+  const handleMonthYearSelect = (monthYear) => {
+    setSelectedMonthYear(monthYear);
+    setSelectedId(monthYearIdMap[monthYear]);
     setShowPicker(false);
   };
 
-  const handleYearSelect = (year) => {
-    setSelectedYear(year);
-    setShowYearPicker(false);
-  };
-
   const handleTotalPresentChange = (text) => {
+    if (!selectedMonthYear) {
+      Toast.show({
+        type: 'error',
+        text1: 'Please select a month and year first.',
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+      return;
+    }
+
     const presentDays = parseInt(text) || 0;
-    const selectedDate = new Date(selectedYear, months.findIndex((m) => m === selectedMonth));
+    const [selectedMonth, selectedYear] = selectedMonthYear.split(' ');
+    const selectedDate = new Date(parseInt(selectedYear), months.indexOf(selectedMonth));
     const totalDaysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
 
     if (presentDays > totalDaysInMonth) {
-    Toast.show({
-      type: 'error',
-      text1: `Total present days cannot exceed total days in ${selectedMonth}`,
-      visibilityTime: 3000, // Optional duration in milliseconds
-      autoHide: true, // Auto hide the toast after visibilityTime
-    });
+      Toast.show({
+        type: 'error',
+        text1: `Total present days cannot exceed total days in ${selectedMonth}`,
+        visibilityTime: 3000,
+        autoHide: true,
+      });
     } else if (presentDays < 0) {
       Toast.show({
         type: 'error',
@@ -126,34 +170,54 @@ const UpdateAttendanceForm = ({ route }) => {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        instructor_id: instructorId,
+        learner_name: learnerName,
+        month_year_id: selectedId,
+        present_days: totalPresentDays,
+        absent_days: totalAbsentDays,
+      };
+      const response = await axios.post('http://yourapiurl.com/updateAttendance', payload);
+      if (response.status === 200) {
+        Toast.show({
+          type: 'success',
+          text1: 'Attendance updated successfully!',
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to update attendance.',
+      });
+      console.error('Error updating attendance:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.headerText}>Update Attendance For <Text style={styles.learnerName}>{learnerName}</Text></Text>
-      <YearPicker
-        visible={showYearPicker}
-        onSelect={handleYearSelect}
-        onClose={() => setShowYearPicker(false)}
-      />
       <MonthPicker
         visible={showPicker}
-        onSelect={handleMonthSelect}
+        onSelect={handleMonthYearSelect}
         onClose={() => setShowPicker(false)}
+        monthYearRange={monthYearRange}
       />
       <TextInput
         mode="outlined"
-        label="Select Year"
+        label="Select Month and Year"
         editable={false}
-        placeholder="Select Year"
-        value={selectedYear ? selectedYear.toString() : ''}
-        right={<TextInput.Icon onPress={() => setShowYearPicker(true)} icon="calendar" />}
-        style={styles.textInput}
-      />
-      <TextInput
-        mode="outlined"
-        label="Select Month"
-        editable={false}
-        placeholder="Select Month"
-        value={selectedMonth}
+        placeholder="Select Month and Year"
+        value={selectedMonthYear}
         right={<TextInput.Icon onPress={() => setShowPicker(true)} icon="calendar" />}
         style={styles.textInput}
       />
@@ -163,6 +227,7 @@ const UpdateAttendanceForm = ({ route }) => {
         label="Total Present Days"
         style={styles.textInput}
         onChangeText={handleTotalPresentChange}
+        editable={!!selectedMonthYear} // Disable input if no month and year is selected
       />
       <TextInput
         mode="outlined"
@@ -176,7 +241,8 @@ const UpdateAttendanceForm = ({ route }) => {
         style={styles.button}
         icon="update"
         mode="contained"
-        onPress={() => console.log('Pressed')}
+        onPress={handleSubmit}
+        disabled={!selectedMonthYear} // Disable button if no month and year is selected
       >
         Update Attendance
       </Button>
@@ -189,69 +255,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 20,
   },
   headerText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 20,
+  },
+  learnerName: {
+    color: 'blue',
   },
   textInput: {
     marginBottom: 20,
   },
   button: {
     marginTop: 20,
-    height: 50,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    borderRadius: 5,
+    alignItems: 'center',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modal: {
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     padding: 20,
     borderRadius: 10,
     width: '80%',
-    height: '85%',
-    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
-    marginBottom: 15,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   scrollView: {
-    width: '100%',
+    maxHeight: 300,
   },
   monthButton: {
-    paddingVertical: 10,
-    width: '100%',
-    alignItems: 'flex-start',
-    backgroundColor: '#794fed16',
-    marginBottom: 5,
-    paddingHorizontal: 10,
-    borderRadius: 2,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
   selectedMonthButton: {
-    backgroundColor: '#794fedc1',
+    backgroundColor: '#e0e0e0',
   },
   monthText: {
     fontSize: 16,
   },
   closeButton: {
     marginTop: 20,
+    alignSelf: 'center',
   },
   closeButtonText: {
     fontSize: 16,
     color: 'blue',
-  },
-  learnerName: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: '#333',
   },
 });
 

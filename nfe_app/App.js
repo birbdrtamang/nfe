@@ -23,7 +23,7 @@ function HomeStack() {
     <Stack.Navigator>
       <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
       <Stack.Screen options={{ headerShown: false }} name="Take Attendance" component={TakeAttendance} />
-      <Stack.Screen name="Update Attendance" component={UpdateAttendanceForm} />
+      <Stack.Screen options={{ headerShown: false }} name="Update Attendance" component={UpdateAttendanceForm} />
     </Stack.Navigator>
   );
 }

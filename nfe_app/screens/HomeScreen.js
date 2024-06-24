@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, ImageBackground, TouchableOpacity, Dimensions, Platform } from 'react-native';
+// import React from 'react';
+import {Linking, View, Text, Image, StyleSheet, ImageBackground, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 const { width: windowWidth } = Dimensions.get('window');
@@ -11,6 +11,15 @@ const carouselImages = [
 ];
 
 const HomeScreen = ({ navigation }) => {
+
+  const googleFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScWj0Pe5TzHjw2SOPZmP9VvQwuwFBVQamC0qvuHJiNXTSM6vw/viewform';
+  // Function to handle open google form
+  const handlePress = () => {
+    Linking.openURL(googleFormUrl).catch((err) =>
+      console.error('An error occurred', err)
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.carouselContainer}>
@@ -47,7 +56,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity style={[styles.gridItem, styles.shadow]} onPress={() => navigation.navigate('Take Attendance')}>
           <View style={styles.placeholder}>
-            <Image source={require('../assets/takeattendance.jpeg')} style={styles.image} />
+            <Image source={require('../assets/ta.png')} style={styles.image} />
             <Text style={styles.itemName}>Take Attendance</Text>
           </View>
         </TouchableOpacity>
@@ -66,10 +75,10 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.gridItem, styles.shadow]}>
+        <TouchableOpacity style={[styles.gridItem, styles.shadow]} onPress={handlePress}>
           <View style={styles.placeholder}>
-            <Image source={require('../assets/lecture.png')} style={styles.image} />
-            <Text style={styles.itemName}>Marks</Text>
+            <Image source={require('../assets/helpdesk.png')} style={styles.image} />
+            <Text style={styles.itemName}>Help Desk</Text>
           </View>
         </TouchableOpacity>
 
